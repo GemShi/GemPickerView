@@ -7,9 +7,10 @@
 //
 
 #import "GemPickerViewController.h"
-#import "Header.h"
+#import "GemPresentTransition.h"
 
-@interface GemPickerViewController ()<UIPickerViewDelegate,UIPickerViewDataSource>
+@interface GemPickerViewController ()<UIPickerViewDelegate,UIPickerViewDataSource,UIViewControllerTransitioningDelegate>
+@property(nonatomic)GemPresentTransition *presentTransition;
 @property(nonatomic,strong)NSMutableArray *dataArray;//plist文件读取的数据
 @property(nonatomic,strong)UIPickerView *addressPicker;//地址选择器
 @property(nonatomic,strong)NSMutableArray *provinceArray;//省数组
@@ -31,7 +32,7 @@
 -(UIPickerView *)addressPicker
 {
     if (!_addressPicker) {
-        _addressPicker = [[UIPickerView alloc]initWithFrame:CGRectMake(0, 40, Device_WIDTH, 160)];
+        _addressPicker = [[UIPickerView alloc]initWithFrame:CGRectMake(0, 40, [UIScreen mainScreen].bounds.size.width, 160)];
         _addressPicker.delegate = self;
         _addressPicker.dataSource = self;
         _addressPicker.backgroundColor = [UIColor whiteColor];
@@ -44,9 +45,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
     [self initData];
     [self createLayout];
+    [self addressPicker];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -54,12 +55,11 @@
     // Dispose of any resources that can be recreated.
 }
 
--(void)viewWillAppear:(BOOL)animated
+-(void)viewDidAppear:(BOOL)animated
 {
-    [super viewWillAppear:animated];
+    [super viewDidAppear:animated];
     [UIView animateWithDuration:0.3 animations:^{
-        _animView.frame = CGRectMake(0, Device_HEIGHT - 200, Device_WIDTH, 200);
-        [self addressPicker];
+        _animView.frame = CGRectMake(0, [UIScreen mainScreen].bounds.size.height - 200, [UIScreen mainScreen].bounds.size.width, 200);
     }];
 }
 
@@ -83,18 +83,26 @@
         NSMutableArray *cityArray = [[NSMutableArray alloc]init];
         for (NSDictionary *subDict in dict[@"sub"]) {
             [cityArray addObject:subDict[@"name"]];
-            [self.districtDict setObject:subDict[@"sub"] forKey:subDict[@"name"]];
+            NSArray *array = [NSArray arrayWithArray:subDict[@"sub"]];
+            if (array.count == 0) {
+                [self.districtDict setObject:@[@""] forKey:subDict[@"name"]];
+            }else{
+                [self.districtDict setObject:subDict[@"sub"] forKey:subDict[@"name"]];
+            }
         }
         [self.cityDict setObject:cityArray forKey:dict[@"name"]];
     }
+    _presentTransition = [[GemPresentTransition alloc]init];
+    _presentTransition.animationDuration = 0;
+    self.transitioningDelegate = self;
 }
 
 -(void)createLayout
 {
-    self.view.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.7];
+    self.view.backgroundColor = [UIColor colorWithWhite:0.3 alpha:0.7];
     UITapGestureRecognizer *tapGR = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(tap:)];
     [self.view addGestureRecognizer:tapGR];
-    _animView = [[UIView alloc]initWithFrame:CGRectMake(0, Device_HEIGHT, Device_WIDTH, 200)];
+    _animView = [[UIView alloc]initWithFrame:CGRectMake(0, [UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width, 200)];
     _animView.backgroundColor = [UIColor colorWithRed:0.93 green:0.93 blue:0.93 alpha:1.00];
     [self.view addSubview:_animView];
     UIButton *cancelButton = [[UIButton alloc]initWithFrame:CGRectMake(8, 0, 70, 40)];
@@ -102,7 +110,7 @@
     [cancelButton setTitleColor:[UIColor colorWithRed:0.17 green:0.74 blue:0.61 alpha:1.00] forState:UIControlStateNormal];
     [cancelButton addTarget:self action:@selector(cancelClick) forControlEvents:UIControlEventTouchUpInside];
     [_animView addSubview:cancelButton];
-    UIButton *confirmButton = [[UIButton alloc]initWithFrame:CGRectMake(Device_WIDTH - 78, 0, 70, 40)];
+    UIButton *confirmButton = [[UIButton alloc]initWithFrame:CGRectMake([UIScreen mainScreen].bounds.size.width - 78, 0, 70, 40)];
     [confirmButton setTitle:@"确定" forState:UIControlStateNormal];
     [confirmButton setTitleColor:[UIColor colorWithRed:0.17 green:0.74 blue:0.61 alpha:1.00] forState:UIControlStateNormal];
     [confirmButton addTarget:self action:@selector(confirmClick) forControlEvents:UIControlEventTouchUpInside];
@@ -126,6 +134,12 @@
 -(void)cancelClick
 {
     [self dismissViewControllerAnimated:NO completion:nil];
+}
+
+#pragma mark - UIViewControllerTransitioningDelegate
+- (nullable id <UIViewControllerAnimatedTransitioning>)animationControllerForPresentedController:(UIViewController *)presented presentingController:(UIViewController *)presenting sourceController:(UIViewController *)source
+{
+    return _presentTransition;
 }
 
 #pragma mark - 代理方法
@@ -166,7 +180,7 @@
 //列宽
 -(CGFloat)pickerView:(UIPickerView *)pickerView widthForComponent:(NSInteger)component
 {
-    return Device_WIDTH / 3;
+    return [UIScreen mainScreen].bounds.size.width / 3;
 }
 //内容显示代理方法
 -(UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view
@@ -174,7 +188,7 @@
     if (!view) {
         view = [[UIView alloc]init];
     }
-    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, Device_WIDTH / 3, 30)];
+    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width / 3, 30)];
     label.textAlignment = NSTextAlignmentCenter;
     label.font = [UIFont systemFontOfSize:17];
     [view addSubview:label];

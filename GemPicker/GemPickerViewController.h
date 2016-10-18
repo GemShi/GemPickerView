@@ -10,7 +10,7 @@
 
 @protocol GemPickerViewControllerDelegate <NSObject>
 
-@optional
+@required
 /**传参代理方法*/
 -(void)addressPickerViewControllerChooseProvince:(NSString *)province City:(NSString *)city District:(NSString *)district;
 
