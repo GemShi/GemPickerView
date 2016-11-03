@@ -36,9 +36,6 @@
     _textField.borderStyle = UITextBorderStyleRoundedRect;
     _textField.placeholder = @"点选";
     [self.view addSubview:_textField];
-//    UIView *view = [[UIView alloc]initWithFrame:CGRectMake(100, 200, 100, 100)];
-//    view.backgroundColor = [UIColor greenColor];
-//    [self.view addSubview:view];
 }
 
 -(BOOL)textFieldShouldBeginEditing:(UITextField *)textField
@@ -50,7 +47,6 @@
     GemPickerViewController *gpvc = [[GemPickerViewController alloc]init];
     gpvc.delegate = self;
     [self presentViewController:gpvc animated:YES completion:nil];
-//    gpvc.modalPresentationStyle = UIModalPresentationOverCurrentContext;//设置弹出的controller为透明
     return NO;
 }
 
